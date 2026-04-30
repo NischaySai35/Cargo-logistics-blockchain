@@ -43,7 +43,6 @@ const ROLE_META = {
 };
 
 const STORAGE_KEY = "dln-lite-role-session";
-
 export default function PortalShell() {
   const [selectedRole, setSelectedRole] = useState("shipper");
   const [currentRole, setCurrentRole] = useState(null);
@@ -67,12 +66,18 @@ export default function PortalShell() {
   }, []);
 
   useEffect(() => {
-    Promise.all([getSummary().catch(() => ({ data: null })), getAllShipments().catch(() => ({ data: [] }))]).then(
-      ([summaryResponse, shipmentResponse]) => {
-        setSummary(summaryResponse.data || null);
-        setShipments(shipmentResponse.data || []);
-      }
-    );
+    const loadNetworkState = () => {
+      Promise.all([getSummary().catch(() => ({ data: null })), getAllShipments().catch(() => ({ data: [] }))]).then(
+        ([summaryResponse, shipmentResponse]) => {
+          setSummary(summaryResponse.data || null);
+          setShipments(shipmentResponse.data || []);
+        }
+      );
+    };
+
+    loadNetworkState();
+    const interval = setInterval(loadNetworkState, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const totals = useMemo(() => {

@@ -1,52 +1,67 @@
 {
-  "name": "dln-lite-network",
+  "name": "dln-lite-logistics-network",
   "version": "1.0.0",
   "client": {
-    "organization": "Org1",
+    "organization": "Shipper",
     "connection": {
       "timeout": {
-        "peer":    { "endorser": "300" },
+        "peer": { "endorser": "300" },
         "orderer": "300"
       }
     }
   },
   "organizations": {
-    "Org1": {
-      "mspid": "Org1MSP",
-      "peers": ["peer0.org1.dln.com"],
-      "certificateAuthorities": ["ca.org1.dln.com"],
+    "Shipper": {
+      "mspid": "ShipperMSP",
+      "peers": ["peer0.shipper.dln.com"],
+      "certificateAuthorities": ["ca.shipper.dln.com"],
       "adminPrivateKey": {
-        "path": "crypto-config/peerOrganizations/org1.dln.com/users/Admin@org1.dln.com/msp/keystore/priv_sk"
+        "path": "crypto-config/peerOrganizations/shipper.dln.com/users/Admin@shipper.dln.com/msp/keystore/priv_sk"
       },
       "signedCert": {
-        "path": "crypto-config/peerOrganizations/org1.dln.com/users/Admin@org1.dln.com/msp/signcerts/Admin@org1.dln.com-cert.pem"
+        "path": "crypto-config/peerOrganizations/shipper.dln.com/users/Admin@shipper.dln.com/msp/signcerts/Admin@shipper.dln.com-cert.pem"
       }
     },
-    "Org2": {
-      "mspid": "Org2MSP",
-      "peers": ["peer0.org2.dln.com"],
-      "certificateAuthorities": ["ca.org2.dln.com"]
+    "Carrier": {
+      "mspid": "CarrierMSP",
+      "peers": ["peer0.carrier.dln.com"],
+      "certificateAuthorities": ["ca.carrier.dln.com"]
+    },
+    "Customs": {
+      "mspid": "CustomsMSP",
+      "peers": ["peer0.customs.dln.com"],
+      "certificateAuthorities": ["ca.customs.dln.com"]
     }
   },
   "peers": {
-    "peer0.org1.dln.com": {
+    "peer0.shipper.dln.com": {
       "url": "grpcs://localhost:7051",
       "tlsCACerts": {
-        "path": "crypto-config/peerOrganizations/org1.dln.com/peers/peer0.org1.dln.com/tls/ca.crt"
+        "path": "crypto-config/peerOrganizations/shipper.dln.com/peers/peer0.shipper.dln.com/tls/ca.crt"
       },
       "grpcOptions": {
-        "ssl-target-name-override": "peer0.org1.dln.com",
-        "hostnameOverride":         "peer0.org1.dln.com"
+        "ssl-target-name-override": "peer0.shipper.dln.com",
+        "hostnameOverride": "peer0.shipper.dln.com"
       }
     },
-    "peer0.org2.dln.com": {
+    "peer0.carrier.dln.com": {
       "url": "grpcs://localhost:9051",
       "tlsCACerts": {
-        "path": "crypto-config/peerOrganizations/org2.dln.com/peers/peer0.org2.dln.com/tls/ca.crt"
+        "path": "crypto-config/peerOrganizations/carrier.dln.com/peers/peer0.carrier.dln.com/tls/ca.crt"
       },
       "grpcOptions": {
-        "ssl-target-name-override": "peer0.org2.dln.com",
-        "hostnameOverride":         "peer0.org2.dln.com"
+        "ssl-target-name-override": "peer0.carrier.dln.com",
+        "hostnameOverride": "peer0.carrier.dln.com"
+      }
+    },
+    "peer0.customs.dln.com": {
+      "url": "grpcs://localhost:11051",
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/customs.dln.com/peers/peer0.customs.dln.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.customs.dln.com",
+        "hostnameOverride": "peer0.customs.dln.com"
       }
     }
   },
@@ -58,19 +73,24 @@
       },
       "grpcOptions": {
         "ssl-target-name-override": "orderer.dln.com",
-        "hostnameOverride":         "orderer.dln.com"
+        "hostnameOverride": "orderer.dln.com"
       }
     }
   },
   "certificateAuthorities": {
-    "ca.org1.dln.com": {
+    "ca.shipper.dln.com": {
       "url": "http://localhost:7054",
-      "caName": "ca-org1",
+      "caName": "ca-shipper",
       "httpOptions": { "verify": false }
     },
-    "ca.org2.dln.com": {
+    "ca.carrier.dln.com": {
       "url": "http://localhost:8054",
-      "caName": "ca-org2",
+      "caName": "ca-carrier",
+      "httpOptions": { "verify": false }
+    },
+    "ca.customs.dln.com": {
+      "url": "http://localhost:10054",
+      "caName": "ca-customs",
       "httpOptions": { "verify": false }
     }
   },
@@ -78,17 +98,23 @@
     "dlnchannel": {
       "orderers": ["orderer.dln.com"],
       "peers": {
-        "peer0.org1.dln.com": {
-          "endorsingPeer":  true,
+        "peer0.shipper.dln.com": {
+          "endorsingPeer": true,
           "chaincodeQuery": true,
-          "ledgerQuery":    true,
-          "eventSource":    true
+          "ledgerQuery": true,
+          "eventSource": true
         },
-        "peer0.org2.dln.com": {
-          "endorsingPeer":  true,
+        "peer0.carrier.dln.com": {
+          "endorsingPeer": true,
           "chaincodeQuery": true,
-          "ledgerQuery":    true,
-          "eventSource":    false
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer0.customs.dln.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
         }
       }
     }

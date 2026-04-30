@@ -16,9 +16,15 @@ export default function WatchlistPanel({ title = "Priority Watchlist", subtitle 
   const navigate = useNavigate();
 
   useEffect(() => {
-    getAllShipments()
-      .then((response) => setShipments(response.data || []))
-      .catch(() => setShipments([]));
+    const loadShipments = () => {
+      getAllShipments()
+        .then((response) => setShipments(response.data || []))
+        .catch(() => setShipments([]));
+    };
+
+    loadShipments();
+    const interval = setInterval(loadShipments, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const featured = useMemo(() => {

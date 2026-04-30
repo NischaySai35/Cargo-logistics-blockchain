@@ -35,12 +35,19 @@ services:
       ML_SERVICE_URL: http://ml-service:5000
       FABRIC_CHANNEL: dlnchannel
       FABRIC_CHAINCODE: shipment
+      FABRIC_CONNECTION_PROFILE: /app/connection-profile.json
+      FABRIC_CRYPTO_CONFIG_PATH: /app/crypto-config
+      FABRIC_NETWORK_MODE: docker
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
     volumes:
       - ./blockchain/network/crypto-config:/app/crypto-config:ro
+      - ./blockchain/network/connection-profile.json:/app/connection-profile.json:ro
     depends_on:
       - mongodb
     networks:
       - dln-network
+      - dln-fabric
 
   # ─────────────────────────────────────────────
   # ML Service — Python Flask + XGBoost
@@ -84,3 +91,5 @@ volumes:
 networks:
   dln-network:
     driver: bridge
+  dln-fabric:
+    external: true
