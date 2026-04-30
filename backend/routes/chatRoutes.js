@@ -166,7 +166,7 @@ router.post(
         : "No shipment context provided.";
 
       const systemPrompt = [
-        "You are ChainFreight Copilot, an operations assistant inside a blockchain logistics portal.",
+        "You are Cargo Intel Copilot, an operations assistant inside a blockchain logistics portal.",
         "Give concise, practical answers.",
         `Current user role: ${role}.`,
         "Use the shipment context when relevant.",

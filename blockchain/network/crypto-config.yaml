@@ -1,7 +1,5 @@
-# crypto-config.yaml - 3-Org DLN-Lite Network
-# Shipper: creates/sends shipments
-# Carrier: moves shipments between ports
-# Customs: verifies/clears shipments at the end
+# crypto-config.yaml — 3-Org DLN-Lite Network
+# Org1: Shipping Line, Org2: Port Authority, Org3: Customs Body
 
 OrdererOrgs:
   - Name: Orderer
@@ -10,24 +8,24 @@ OrdererOrgs:
       - Hostname: orderer
 
 PeerOrgs:
-  - Name: Shipper
-    Domain: shipper.dln.com
+  - Name: Org1
+    Domain: org1.dln.com
     EnableNodeOUs: true
     Template:
       Count: 1
     Users:
       Count: 1
 
-  - Name: Carrier
-    Domain: carrier.dln.com
+  - Name: Org2
+    Domain: org2.dln.com
     EnableNodeOUs: true
     Template:
       Count: 1
     Users:
       Count: 1
 
-  - Name: Customs
-    Domain: customs.dln.com
+  - Name: Org3
+    Domain: org3.dln.com
     EnableNodeOUs: true
     Template:
       Count: 1

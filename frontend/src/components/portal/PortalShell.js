@@ -53,6 +53,15 @@ export default function PortalShell() {
   const [summary, setSummary] = useState(null);
   const [shipments, setShipments] = useState([]);
 
+  const syncPortalData = async () => {
+    const [summaryResponse, shipmentResponse] = await Promise.all([
+      getSummary().catch(() => ({ data: null })),
+      getAllShipments().catch(() => ({ data: [] })),
+    ]);
+    setSummary(summaryResponse.data || null);
+    setShipments(shipmentResponse.data || []);
+  };
+
   useEffect(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
@@ -66,18 +75,18 @@ export default function PortalShell() {
   }, []);
 
   useEffect(() => {
-    const loadNetworkState = () => {
-      Promise.all([getSummary().catch(() => ({ data: null })), getAllShipments().catch(() => ({ data: [] }))]).then(
-        ([summaryResponse, shipmentResponse]) => {
-          setSummary(summaryResponse.data || null);
-          setShipments(shipmentResponse.data || []);
-        }
-      );
-    };
+    syncPortalData();
 
-    loadNetworkState();
-    const interval = setInterval(loadNetworkState, 5000);
-    return () => clearInterval(interval);
+    const intervalId = window.setInterval(syncPortalData, 10000);
+    const handleFocus = () => {
+      syncPortalData();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   const totals = useMemo(() => {
@@ -127,7 +136,7 @@ export default function PortalShell() {
             <div className="live-ticker"><span className="dot-ping" />LIVE: 2,847 shipments tracked on-chain</div>
             <div className="logo">
               <div className="logo-icon">🌐</div>
-              <div className="logo-text">ChainFreight</div>
+              <div className="logo-text">Cargo Intel</div>
             </div>
             <div className="hero-tag">Blockchain Logistics Platform</div>
             <h1 className="hero-title">Global Trade,<br />On the Chain</h1>
@@ -157,7 +166,7 @@ export default function PortalShell() {
       ) : (
         <div id="app" className="screen active portal-app-screen">
           <div className="topbar">
-            <div className="topbar-logo">⛓ ChainFreight</div>
+            <div className="topbar-logo">⛓ Cargo Intel</div>
             <div className="nav-tabs" id="nav-tabs">
               <button className="nav-tab active" type="button">{role.icon} {role.name}</button>
             </div>
@@ -169,9 +178,9 @@ export default function PortalShell() {
           </div>
 
           <div className="dash-content">
-            {currentRole === "shipper" ? <ShipperDashboard totals={totals} /> : null}
-            {currentRole === "carrier" ? <CarrierDashboard totals={totals} /> : null}
-            {currentRole === "customs" ? <CustomsDashboard totals={totals} /> : null}
+            {currentRole === "shipper" ? <ShipperDashboard totals={totals} shipments={shipments} onShipmentCreated={syncPortalData} /> : null}
+            {currentRole === "carrier" ? <CarrierDashboard totals={totals} shipments={shipments} /> : null}
+            {currentRole === "customs" ? <CustomsDashboard totals={totals} shipments={shipments} /> : null}
           </div>
         </div>
       )}
@@ -217,7 +226,7 @@ function PanelHeader({ roleKey }) {
   );
 }
 
-function ShipperDashboard({ totals }) {
+function ShipperDashboard({ totals, shipments, onShipmentCreated }) {
   return (
     <div className="dash-panel active" id="panel-shipper">
       <PanelHeader roleKey="shipper" />
@@ -233,8 +242,8 @@ function ShipperDashboard({ totals }) {
       </div>
 
       <div className="portal-dashboard-grid">
-        <CreateShipment embedded />
-        <WatchlistPanel />
+        <CreateShipment embedded onCreated={onShipmentCreated} />
+        <WatchlistPanel shipments={shipments} />
         <Analytics embedded />
         <DisruptionFeed embedded />
         <RouteOptimizer embedded />
@@ -243,7 +252,7 @@ function ShipperDashboard({ totals }) {
   );
 }
 
-function CarrierDashboard({ totals }) {
+function CarrierDashboard({ totals, shipments }) {
   return (
     <div className="dash-panel active" id="panel-carrier">
       <PanelHeader roleKey="carrier" />
@@ -259,7 +268,12 @@ function CarrierDashboard({ totals }) {
       </div>
 
       <div className="portal-dashboard-grid">
-        <WatchlistPanel />
+        <WatchlistPanel
+          shipments={shipments}
+          title="Active Shipments"
+          subtitle="Newest active carrier records across the network"
+          sortMode="recent"
+        />
         <Analytics embedded />
         <RiskPredictor embedded />
         <DisruptionFeed embedded />
@@ -268,7 +282,7 @@ function CarrierDashboard({ totals }) {
   );
 }
 
-function CustomsDashboard({ totals }) {
+function CustomsDashboard({ totals, shipments }) {
   return (
     <div className="dash-panel active" id="panel-customs">
       <PanelHeader roleKey="customs" />
@@ -284,10 +298,15 @@ function CustomsDashboard({ totals }) {
       </div>
 
       <div className="portal-dashboard-grid">
-        <WatchlistPanel />
+        <WatchlistPanel
+          shipments={shipments}
+          title="Incoming Shipments"
+          subtitle="Active shipments awaiting carrier or customs review"
+          sortMode="recent"
+        />
         <Analytics embedded />
         <DisruptionFeed embedded />
-        <ImmutabilityDemo embedded />
+        <ImmutabilityDemo embedded shipments={shipments} />
       </div>
     </div>
   );

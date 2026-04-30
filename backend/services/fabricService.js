@@ -1,228 +1,64 @@
-const fs = require("fs");
-const path = require("path");
-const { Gateway, Wallets } = require("fabric-network");
+// fabricService.js — MOCK ONLY (no Fabric needed)
+const { v4: uuidv4 } = require("uuid");
 
-const CHANNEL_NAME = process.env.FABRIC_CHANNEL || "dlnchannel";
-const CHAINCODE_NAME = process.env.FABRIC_CHAINCODE || "shipment";
-const FABRIC_ORG = {
-  shipper: {
-    label: "shipperAdmin",
-    mspId: "ShipperMSP",
-    domain: "shipper.dln.com",
-    admin: "Admin@shipper.dln.com",
+let ledger = [
+  {
+    shipmentId: "SHP-001", containerId: "CONT-ABC123", origin: "Shanghai, CN", destination: "Rotterdam, NL", carrier: "OceanFreight Co", shipper: "Org1MSP", currentHolder: "Org1MSP", status: "IN_TRANSIT", cargoType: "Electronics", weightKg: 14200, createdAt: "2024-01-15T08:00:00Z", estimatedArrival: "2024-03-15T00:00:00Z", actualArrival: null, delayRiskScore: 0.71,
+    events: [
+      { eventId: "EVT-001-1", eventType: "SHIPMENT_CREATED", location: "Shanghai, CN", actor: "Org1MSP", timestamp: "2024-01-15T08:00:00Z", description: "Shipment created", txId: "tx_abc001" },
+      { eventId: "EVT-001-2", eventType: "DEPARTED_PORT", location: "Shanghai Port", actor: "Org1MSP", timestamp: "2024-01-16T10:00:00Z", description: "Vessel MSC Beatrice departed", txId: "tx_abc002" },
+    ]
   },
-  carrier: {
-    label: "carrierAdmin",
-    mspId: "CarrierMSP",
-    domain: "carrier.dln.com",
-    admin: "Admin@carrier.dln.com",
+  {
+    shipmentId: "SHP-002", containerId: "CONT-XYZ789", origin: "Mumbai, IN", destination: "Felixstowe, UK", carrier: "GlobalShip Ltd", shipper: "Org2MSP", currentHolder: "Org2MSP", status: "AT_PORT", cargoType: "Textiles", weightKg: 9800, createdAt: "2024-01-20T10:00:00Z", estimatedArrival: "2024-03-28T00:00:00Z", actualArrival: null, delayRiskScore: 0.85,
+    events: [
+      { eventId: "EVT-002-1", eventType: "SHIPMENT_CREATED", location: "Mumbai, IN", actor: "Org2MSP", timestamp: "2024-01-20T10:00:00Z", description: "Shipment registered", txId: "tx_xyz001" },
+      { eventId: "EVT-002-2", eventType: "DEPARTED_PORT", location: "Nhava Sheva, Mumbai", actor: "Org2MSP", timestamp: "2024-01-22T06:00:00Z", description: "Vessel departed", txId: "tx_xyz002" },
+      { eventId: "EVT-002-3", eventType: "ARRIVED_PORT", location: "Port Said, Egypt", actor: "Org2MSP", timestamp: "2024-01-29T14:30:00Z", description: "Arrived at transit port", txId: "tx_xyz003" },
+    ]
   },
-  customs: {
-    label: "customsAdmin",
-    mspId: "CustomsMSP",
-    domain: "customs.dln.com",
-    admin: "Admin@customs.dln.com",
+  {
+    shipmentId: "SHP-003", containerId: "CONT-SG003", origin: "Singapore", destination: "Los Angeles, US", carrier: "MarineX", shipper: "Org1MSP", currentHolder: "Org1MSP", status: "IN_TRANSIT", cargoType: "Machinery", weightKg: 22000, createdAt: "2024-02-01T09:00:00Z", estimatedArrival: "2024-04-02T00:00:00Z", actualArrival: null, delayRiskScore: 0.34,
+    events: [
+      { eventId: "EVT-003-1", eventType: "SHIPMENT_CREATED", location: "Singapore", actor: "Org1MSP", timestamp: "2024-02-01T09:00:00Z", description: "Heavy lift equipment containerised", txId: "tx_sg001" },
+      { eventId: "EVT-003-2", eventType: "DEPARTED_PORT", location: "Singapore Port", actor: "Org1MSP", timestamp: "2024-02-03T12:00:00Z", description: "Vessel departed for LA", txId: "tx_sg002" },
+    ]
   },
-};
+  {
+    shipmentId: "SHP-004", containerId: "CONT-DU004", origin: "Dubai, UAE", destination: "Hamburg, DE", carrier: "AquaLine", shipper: "Org2MSP", currentHolder: "Org2MSP", status: "DELIVERED", cargoType: "Food", weightKg: 6500, createdAt: "2024-01-10T07:00:00Z", estimatedArrival: "2024-02-20T00:00:00Z", actualArrival: "2024-02-18T14:00:00Z", delayRiskScore: 0.12,
+    events: [
+      { eventId: "EVT-004-1", eventType: "SHIPMENT_CREATED", location: "Dubai, UAE", actor: "Org2MSP", timestamp: "2024-01-10T07:00:00Z", description: "Perishable goods loaded", txId: "tx_du001" },
+      { eventId: "EVT-004-2", eventType: "DEPARTED_PORT", location: "Jebel Ali Port", actor: "Org2MSP", timestamp: "2024-01-12T08:00:00Z", description: "Reefer containers departed", txId: "tx_du002" },
+      { eventId: "EVT-004-3", eventType: "CUSTOMS_CLEARED", location: "Hamburg, DE", actor: "Org2MSP", timestamp: "2024-02-18T10:00:00Z", description: "Customs cleared", txId: "tx_du003" },
+      { eventId: "EVT-004-4", eventType: "DELIVERED", location: "Hamburg, DE", actor: "Org2MSP", timestamp: "2024-02-18T14:00:00Z", description: "Delivered to consignee", txId: "tx_du004" },
+    ]
+  },
+  {
+    shipmentId: "SHP-005", containerId: "CONT-BS005", origin: "Busan, KR", destination: "Rotterdam, NL", carrier: "SeaRoute Express", shipper: "Org1MSP", currentHolder: "Org1MSP", status: "DELAYED", cargoType: "Chemicals", weightKg: 11000, createdAt: "2024-01-25T11:00:00Z", estimatedArrival: "2024-03-10T00:00:00Z", actualArrival: null, delayRiskScore: 0.91,
+    events: [
+      { eventId: "EVT-005-1", eventType: "SHIPMENT_CREATED", location: "Busan, KR", actor: "Org1MSP", timestamp: "2024-01-25T11:00:00Z", description: "Hazmat class 3 registered", txId: "tx_bs001" },
+      { eventId: "EVT-005-2", eventType: "DEPARTED_PORT", location: "Busan Port", actor: "Org1MSP", timestamp: "2024-01-27T09:00:00Z", description: "Vessel departed", txId: "tx_bs002" },
+      { eventId: "EVT-005-3", eventType: "DELAY_REPORTED", location: "South China Sea", actor: "Org1MSP", timestamp: "2024-02-05T16:00:00Z", description: "Storm — rerouted, ETA +8 days", txId: "tx_bs003" },
+    ]
+  },
+  {
+    shipmentId: "SHP-006", containerId: "CONT-LA006", origin: "Los Angeles, US", destination: "Tokyo, JP", carrier: "MarineX", shipper: "Org3MSP", currentHolder: "Org3MSP", status: "IN_TRANSIT", cargoType: "General", weightKg: 8000, createdAt: "2024-02-10T06:00:00Z", estimatedArrival: "2024-03-20T00:00:00Z", actualArrival: null, delayRiskScore: 0.22,
+    events: [
+      { eventId: "EVT-006-1", eventType: "SHIPMENT_CREATED", location: "Los Angeles, US", actor: "Org3MSP", timestamp: "2024-02-10T06:00:00Z", description: "Shipment created by Org3", txId: "tx_la001" },
+      { eventId: "EVT-006-2", eventType: "DEPARTED_PORT", location: "Port of LA", actor: "Org3MSP", timestamp: "2024-02-12T09:00:00Z", description: "Vessel departed for Tokyo", txId: "tx_la002" },
+    ]
+  },
+];
 
-const TRANSPORT_EVENTS = new Set([
-  "DEPARTED_PORT",
-  "ARRIVED_PORT",
-  "DELAY_REPORTED",
-  "CUSTODY_PICKED_UP",
-  "CHECKPOINT_REACHED",
-  "TRANSSHIPMENT",
-]);
-const CUSTOMS_EVENTS = new Set(["CUSTOMS_ENTRY", "CUSTOMS_CLEARED", "CUSTOMS_REJECTED", "INSPECTION"]);
+const history = {};
+ledger.forEach(s => {
+  history[s.shipmentId] = [{ txId: "tx_genesis_" + s.shipmentId, timestamp: { seconds: Math.floor(new Date(s.createdAt).getTime() / 1000) }, isDelete: false, value: { ...s } }];
+});
 
-let walletPromise;
-let ccpCache;
-
-function cryptoRoot() {
-  return process.env.FABRIC_CRYPTO_CONFIG_PATH
-    ? path.resolve(process.env.FABRIC_CRYPTO_CONFIG_PATH)
-    : path.resolve(__dirname, "../../blockchain/network/crypto-config");
-}
-
-function connectionProfilePath() {
-  return process.env.FABRIC_CONNECTION_PROFILE
-    ? path.resolve(process.env.FABRIC_CONNECTION_PROFILE)
-    : path.resolve(__dirname, "../../blockchain/network/connection-profile.json");
-}
-
-function normalizeConnectionProfilePaths(value, baseDir) {
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeConnectionProfilePaths(item, baseDir));
-  }
-  if (!value || typeof value !== "object") {
-    return value;
-  }
-
-  const normalized = {};
-  Object.entries(value).forEach(([key, child]) => {
-    if (key === "path" && typeof child === "string" && !path.isAbsolute(child)) {
-      const withoutCryptoPrefix = child.replace(/^crypto-config[\\/]/, "");
-      normalized[key] = path.join(cryptoRoot(), withoutCryptoPrefix);
-    } else {
-      normalized[key] = normalizeConnectionProfilePaths(child, baseDir);
-    }
-  });
-  return normalized;
-}
-
-function useDockerNetworkProfile(ccp) {
-  if (process.env.FABRIC_NETWORK_MODE !== "docker") {
-    return ccp;
-  }
-
-  const replacements = {
-    "grpcs://localhost:7051": "grpcs://peer0.shipper.dln.com:7051",
-    "grpcs://localhost:9051": "grpcs://peer0.carrier.dln.com:9051",
-    "grpcs://localhost:11051": "grpcs://peer0.customs.dln.com:11051",
-    "grpcs://localhost:7050": "grpcs://orderer.dln.com:7050",
-    "http://localhost:7054": "http://ca.shipper.dln.com:7054",
-    "http://localhost:8054": "http://ca.carrier.dln.com:8054",
-    "http://localhost:10054": "http://ca.customs.dln.com:10054",
-  };
-
-  const json = JSON.stringify(ccp).replace(
-    /grpcs:\/\/localhost:(7051|9051|11051|7050)|http:\/\/localhost:(7054|8054|10054)/g,
-    (match) => replacements[match] || match
-  );
-  return JSON.parse(json);
-}
-
-function loadConnectionProfile() {
-  if (ccpCache) {
-    return ccpCache;
-  }
-
-  const profilePath = connectionProfilePath();
-  const rawProfile = JSON.parse(fs.readFileSync(profilePath, "utf8"));
-  const absolutePathProfile = normalizeConnectionProfilePaths(rawProfile, path.dirname(profilePath));
-  ccpCache = useDockerNetworkProfile(absolutePathProfile);
-  return ccpCache;
-}
-
-function readPrivateKey(keyStorePath) {
-  const files = fs.readdirSync(keyStorePath).filter((file) => !file.startsWith("."));
-  if (!files.length) {
-    throw new Error(`No private key found in ${keyStorePath}`);
-  }
-  return fs.readFileSync(path.join(keyStorePath, files[0]), "utf8");
-}
-
-async function getWallet() {
-  if (walletPromise) {
-    return walletPromise;
-  }
-
-  walletPromise = (async () => {
-    const wallet = await Wallets.newInMemoryWallet();
-    const root = cryptoRoot();
-
-    for (const org of Object.values(FABRIC_ORG)) {
-      const mspPath = path.join(root, "peerOrganizations", org.domain, "users", org.admin, "msp");
-      const certificate = fs.readFileSync(path.join(mspPath, "signcerts", `${org.admin}-cert.pem`), "utf8");
-      const privateKey = readPrivateKey(path.join(mspPath, "keystore"));
-
-      await wallet.put(org.label, {
-        credentials: { certificate, privateKey },
-        mspId: org.mspId,
-        type: "X.509",
-      });
-    }
-
-    return wallet;
-  })();
-
-  return walletPromise;
-}
-
-async function withContract(orgKey, fn) {
-  const gateway = new Gateway();
-  const org = FABRIC_ORG[orgKey];
-  if (!org) {
-    throw new Error(`Unknown Fabric org ${orgKey}`);
-  }
-
-  try {
-    await gateway.connect(loadConnectionProfile(), {
-      wallet: await getWallet(),
-      identity: org.label,
-      discovery: {
-        enabled: true,
-        asLocalhost: process.env.FABRIC_NETWORK_MODE !== "docker",
-      },
-    });
-
-    const network = await gateway.getNetwork(CHANNEL_NAME);
-    const contract = network.getContract(CHAINCODE_NAME);
-    return await fn(contract);
-  } finally {
-    gateway.disconnect();
-  }
-}
-
-function parsePayload(buffer) {
-  if (!buffer || buffer.length === 0) {
-    return null;
-  }
-  return normalizeShipmentPayload(JSON.parse(buffer.toString("utf8")));
-}
-
-async function evaluate(orgKey, transactionName, ...args) {
-  return withContract(orgKey, async (contract) => {
-    const result = await contract.evaluateTransaction(transactionName, ...args.map(String));
-    return parsePayload(result);
-  });
-}
-
-async function submit(orgKey, transactionName, ...args) {
-  return withContract(orgKey, async (contract) => {
-    const result = await contract.submitTransaction(transactionName, ...args.map(String));
-    return parsePayload(result);
-  });
-}
-
-function orgForEvent(eventType) {
-  if (eventType === "SHIPMENT_READY") {
-    return "shipper";
-  }
-  if (TRANSPORT_EVENTS.has(eventType)) {
-    return "carrier";
-  }
-  if (CUSTOMS_EVENTS.has(eventType)) {
-    return "customs";
-  }
-  return "shipper";
-}
-
-function normalizeShipmentPayload(value) {
-  if (Array.isArray(value)) {
-    return value.map(normalizeShipmentPayload);
-  }
-  if (!value || typeof value !== "object") {
-    return value;
-  }
-
-  const normalized = { ...value };
-  if (normalized.shipmentId && normalized.actualArrival === undefined) {
-    normalized.actualArrival = "";
-  }
-  return normalized;
-}
-
-async function getCurrentHolder(shipmentId) {
-  const shipment = await evaluate("shipper", "GetShipment", shipmentId);
-  switch (shipment.currentHolder) {
-    case FABRIC_ORG.carrier.mspId:
-      return "carrier";
-    case FABRIC_ORG.customs.mspId:
-      return "customs";
-    default:
-      return "shipper";
-  }
+function find(id) {
+  const s = ledger.find(x => x.shipmentId === id);
+  if (!s) throw new Error(`Shipment ${id} does not exist`);
+  return s;
 }
 
 function normalizeIntegrityPayload(value) {
@@ -232,107 +68,78 @@ function normalizeIntegrityPayload(value) {
 
   if (value && typeof value === "object") {
     const normalized = {};
+
     Object.keys(value)
       .filter((key) => !["meta", "_id", "__v"].includes(key))
       .sort()
       .forEach((key) => {
         normalized[key] = normalizeIntegrityPayload(value[key]);
       });
+
     return normalized;
   }
 
   return value;
 }
 
+const STATUS_MAP = { DEPARTED_PORT: "IN_TRANSIT", ARRIVED_PORT: "AT_PORT", CUSTOMS_ENTRY: "IN_CUSTOMS", CUSTOMS_CLEARED: "IN_TRANSIT", DELIVERED: "DELIVERED" };
+
 module.exports = {
   async createShipment(data) {
     const { shipmentId, containerId, origin, destination, carrier, cargoType, weightKg, estimatedArrival } = data;
-    return submit(
-      "shipper",
-      "CreateShipment",
-      shipmentId,
-      containerId,
-      origin,
-      destination,
-      carrier,
-      cargoType,
-      Number(weightKg),
-      estimatedArrival
-    );
+    const now = new Date().toISOString();
+    const s = {
+      shipmentId, containerId, origin, destination, carrier, shipper: "Org1MSP", currentHolder: "Org1MSP", status: "CREATED", cargoType, weightKg, createdAt: now, estimatedArrival, actualArrival: null, delayRiskScore: 0,
+      events: [{ eventId: `EVT-${shipmentId}-1`, eventType: "SHIPMENT_CREATED", location: origin, actor: "Org1MSP", timestamp: now, description: "Shipment created on blockchain (mock ledger)", txId: `tx_${uuidv4().slice(0, 8)}` }]
+    };
+    ledger.push(s);
+    history[shipmentId] = [{ txId: `tx_${uuidv4().slice(0, 8)}`, timestamp: { seconds: Math.floor(Date.now() / 1000) }, isDelete: false, value: { ...s } }];
+    return s;
   },
-
-  async getShipment(id) {
-    return evaluate("shipper", "GetShipment", id);
-  },
-
-  async getAllShipments() {
-    return evaluate("shipper", "GetAllShipments");
-  },
-
+  async getShipment(id) { return find(id); },
+  async getAllShipments() { return ledger; },
   async recordEvent(shipmentId, eventType, location, description) {
-    const orgKey = orgForEvent(eventType);
-    const shipment = await evaluate("shipper", "GetShipment", shipmentId);
-
-    if (orgKey === "carrier" && shipment.currentHolder === FABRIC_ORG.shipper.mspId) {
-      await submit("shipper", "TransferCustody", shipmentId, FABRIC_ORG.carrier.mspId, location);
-    }
-
-    if (orgKey === "customs" && shipment.currentHolder !== FABRIC_ORG.customs.mspId) {
-      if (shipment.currentHolder === FABRIC_ORG.shipper.mspId) {
-        await submit("shipper", "TransferCustody", shipmentId, FABRIC_ORG.carrier.mspId, location);
-      }
-      await submit("carrier", "TransferCustody", shipmentId, FABRIC_ORG.customs.mspId, location);
-    }
-
-    return submit(orgKey, "RecordEvent", shipmentId, eventType, location, description);
+    const s = find(shipmentId);
+    const now = new Date().toISOString();
+    const txId = `tx_${uuidv4().slice(0, 8)}`;
+    s.events.push({ eventId: `EVT-${shipmentId}-${s.events.length + 1}`, eventType, location, actor: "Org1MSP", timestamp: now, description, txId });
+    if (STATUS_MAP[eventType]) s.status = STATUS_MAP[eventType];
+    history[shipmentId]?.push({ txId, timestamp: { seconds: Math.floor(Date.now() / 1000) }, isDelete: false, value: { ...s } });
+    return s;
   },
-
   async transferCustody(shipmentId, newHolder, location) {
-    return submit(await getCurrentHolder(shipmentId), "TransferCustody", shipmentId, newHolder, location);
+    const s = find(shipmentId); const prev = s.currentHolder; s.currentHolder = newHolder;
+    const now = new Date().toISOString();
+    s.events.push({ eventId: `EVT-${shipmentId}-${s.events.length + 1}`, eventType: "CUSTODY_TRANSFERRED", location, actor: "Org1MSP", timestamp: now, description: `Custody: ${prev} → ${newHolder}`, txId: `tx_${uuidv4().slice(0, 8)}` });
+    return s;
   },
-
   async updateDelayRisk(shipmentId, riskScore) {
-    return submit("shipper", "UpdateDelayRisk", shipmentId, Number(riskScore));
+    const s = find(shipmentId); s.delayRiskScore = riskScore;
+    if (riskScore >= 0.85 && s.status === "IN_TRANSIT") s.status = "DELAYED";
+    return s;
   },
-
   async markDelivered(shipmentId) {
-    const shipment = await evaluate("shipper", "GetShipment", shipmentId);
-    const hasCustomsEntry = shipment.events?.some((event) => event.eventType === "CUSTOMS_ENTRY");
-    const hasCustomsCleared = shipment.events?.some((event) => event.eventType === "CUSTOMS_CLEARED");
-
-    if (shipment.currentHolder !== FABRIC_ORG.customs.mspId) {
-      if (shipment.currentHolder === FABRIC_ORG.shipper.mspId) {
-        await submit("shipper", "TransferCustody", shipmentId, FABRIC_ORG.carrier.mspId, shipment.destination);
-      }
-      await submit("carrier", "TransferCustody", shipmentId, FABRIC_ORG.customs.mspId, shipment.destination);
-    }
-
-    if (!hasCustomsEntry) {
-      await submit("customs", "RecordEvent", shipmentId, "CUSTOMS_ENTRY", shipment.destination, "Shipment entered customs verification");
-    }
-    if (!hasCustomsCleared) {
-      await submit("customs", "RecordEvent", shipmentId, "CUSTOMS_CLEARED", shipment.destination, "Shipment cleared by customs");
-    }
-
-    return submit("customs", "MarkDelivered", shipmentId);
+    const s = find(shipmentId); s.status = "DELIVERED"; s.actualArrival = new Date().toISOString();
+    s.events.push({ eventId: `EVT-${shipmentId}-${s.events.length + 1}`, eventType: "DELIVERED", location: s.destination, actor: "Org1MSP", timestamp: s.actualArrival, description: "Delivered to final destination", txId: `tx_${uuidv4().slice(0, 8)}` });
+    return s;
   },
-
-  async getShipmentHistory(shipmentId) {
-    return evaluate("shipper", "GetShipmentHistory", shipmentId);
-  },
-
+  async getShipmentHistory(shipmentId) { return history[shipmentId] || []; },
   async updateStatus(shipmentId, newStatus, reason) {
-    let orgKey = "shipper";
-    if (["IN_TRANSIT", "AT_PORT", "DELAYED"].includes(newStatus)) {
-      orgKey = "carrier";
-    } else if (["IN_CUSTOMS", "DELIVERED"].includes(newStatus)) {
-      orgKey = "customs";
-    }
-    return submit(orgKey, "UpdateStatus", shipmentId, newStatus, reason);
+    const s = find(shipmentId); const old = s.status; s.status = newStatus;
+    const now = new Date().toISOString(); const txId = `tx_${uuidv4().slice(0, 8)}`;
+    s.events.push({ eventId: `EVT-${shipmentId}-${s.events.length + 1}`, eventType: "STATUS_UPDATED", location: "N/A", actor: "Org1MSP", timestamp: now, description: `Status: ${old} → ${newStatus}. Reason: ${reason}`, txId });
+    history[shipmentId]?.push({ txId, timestamp: { seconds: Math.floor(Date.now() / 1000) }, isDelete: false, value: { ...s } });
+    return s;
   },
-
   async verifyIntegrity(shipmentId, claimedDataJSON) {
-    const claimed = normalizeIntegrityPayload(JSON.parse(claimedDataJSON));
-    return submit("customs", "VerifyIntegrity", shipmentId, JSON.stringify(claimed));
+    const s = find(shipmentId);
+    let claimed; try { claimed = JSON.parse(claimedDataJSON); } catch (e) { throw new Error("Invalid JSON"); }
+    const normalizedClaimed = normalizeIntegrityPayload(claimed);
+    const normalizedLedger = normalizeIntegrityPayload(s);
+    const isMatch = JSON.stringify(normalizedClaimed) === JSON.stringify(normalizedLedger);
+    return {
+      shipmentId, integrityPass: isMatch, verifiedAt: new Date().toISOString(), txId: `tx_verify_${uuidv4().slice(0, 8)}`,
+      message: isMatch ? "INTEGRITY VERIFIED — data matches ledger exactly" : "INTEGRITY FAILED — data has been tampered with"
+    };
   },
 };

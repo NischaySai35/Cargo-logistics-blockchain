@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllShipments } from "../../services/api";
 
 const STATUS_CONFIG = {
   IN_TRANSIT: { className: "status-transit", label: "In Transit" },
@@ -11,28 +10,21 @@ const STATUS_CONFIG = {
   CREATED: { className: "status-pending", label: "Created" },
 };
 
-export default function WatchlistPanel({ title = "Priority Watchlist", subtitle = "Highest-risk active shipments" }) {
-  const [shipments, setShipments] = useState([]);
+export default function WatchlistPanel({
+  title = "Priority Watchlist",
+  subtitle = "Highest-risk active shipments",
+  shipments = [],
+  sortMode = "risk",
+}) {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadShipments = () => {
-      getAllShipments()
-        .then((response) => setShipments(response.data || []))
-        .catch(() => setShipments([]));
-    };
-
-    loadShipments();
-    const interval = setInterval(loadShipments, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   const featured = useMemo(() => {
-    return [...shipments]
-      .filter((shipment) => shipment.status !== "DELIVERED")
-      .sort((a, b) => (b.delayRiskScore || 0) - (a.delayRiskScore || 0))
-      .slice(0, 6);
-  }, [shipments]);
+    const activeShipments = [...shipments].filter((shipment) => shipment.status !== "DELIVERED");
+    const sorted = sortMode === "recent"
+      ? activeShipments.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      : activeShipments.sort((a, b) => (b.delayRiskScore || 0) - (a.delayRiskScore || 0));
+    return sorted.slice(0, 6);
+  }, [shipments, sortMode]);
 
   return (
     <div className="card">

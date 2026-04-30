@@ -19,16 +19,10 @@ export default function ShipmentList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadShipments = () => {
-      getAllShipments()
-        .then((response) => setShipments(response.data || []))
-        .catch(console.error)
-        .finally(() => setLoading(false));
-    };
-
-    loadShipments();
-    const interval = setInterval(loadShipments, 5000);
-    return () => clearInterval(interval);
+    getAllShipments()
+      .then((response) => setShipments(response.data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {

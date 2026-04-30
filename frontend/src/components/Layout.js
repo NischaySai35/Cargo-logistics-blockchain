@@ -23,7 +23,7 @@ export default function Layout() {
             </svg>
           </div>
           <div className="cf-logo-text">
-            <div className="cf-logo-title">ChainFreight / DLN-Lite</div>
+            <div className="cf-logo-title">Cargo Intel / DLN-Lite</div>
             <div className="cf-logo-subtitle">Blockchain logistics command platform</div>
           </div>
         </div>

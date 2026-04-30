@@ -1,5 +1,5 @@
-# configtx.yaml - 3-Org DLN-Lite Channel Configuration
-# Application policy: MAJORITY endorsement, so 2 of 3 logistics orgs must endorse.
+# configtx.yaml — 3-Org DLN-Lite Channel Configuration
+# Endorsement policy: MAJORITY (2 of 3 orgs must sign)
 
 Organizations:
 
@@ -16,69 +16,69 @@ Organizations:
         Rule: "OR('OrdererMSP.member')"
       Admins:
         Type: Signature
-        Rule: "OR('OrdererMSP.member')"
+        Rule: "OR('OrdererMSP.admin')"
 
-  - &Shipper
-    Name: ShipperMSP
-    ID: ShipperMSP
-    MSPDir: crypto-config/peerOrganizations/shipper.dln.com/msp
+  - &Org1
+    Name: Org1MSP
+    ID: Org1MSP
+    MSPDir: crypto-config/peerOrganizations/org1.dln.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('ShipperMSP.member')"
+        Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('ShipperMSP.member')"
+        Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('ShipperMSP.member')"
+        Rule: "OR('Org1MSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('ShipperMSP.peer')"
+        Rule: "OR('Org1MSP.peer')"
     AnchorPeers:
-      - Host: peer0.shipper.dln.com
+      - Host: peer0.org1.dln.com
         Port: 7051
 
-  - &Carrier
-    Name: CarrierMSP
-    ID: CarrierMSP
-    MSPDir: crypto-config/peerOrganizations/carrier.dln.com/msp
+  - &Org2
+    Name: Org2MSP
+    ID: Org2MSP
+    MSPDir: crypto-config/peerOrganizations/org2.dln.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('CarrierMSP.member')"
+        Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('CarrierMSP.member')"
+        Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('CarrierMSP.member')"
+        Rule: "OR('Org2MSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('CarrierMSP.peer')"
+        Rule: "OR('Org2MSP.peer')"
     AnchorPeers:
-      - Host: peer0.carrier.dln.com
+      - Host: peer0.org2.dln.com
         Port: 9051
 
-  - &Customs
-    Name: CustomsMSP
-    ID: CustomsMSP
-    MSPDir: crypto-config/peerOrganizations/customs.dln.com/msp
+  - &Org3
+    Name: Org3MSP
+    ID: Org3MSP
+    MSPDir: crypto-config/peerOrganizations/org3.dln.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('CustomsMSP.member')"
+        Rule: "OR('Org3MSP.admin', 'Org3MSP.peer', 'Org3MSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('CustomsMSP.member')"
+        Rule: "OR('Org3MSP.admin', 'Org3MSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('CustomsMSP.member')"
+        Rule: "OR('Org3MSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('CustomsMSP.peer')"
+        Rule: "OR('Org3MSP.peer')"
     AnchorPeers:
-      - Host: peer0.customs.dln.com
+      - Host: peer0.org3.dln.com
         Port: 11051
 
 Capabilities:
@@ -104,6 +104,7 @@ Application: &ApplicationDefaults
     LifecycleEndorsement:
       Type: ImplicitMeta
       Rule: "MAJORITY Endorsement"
+    # KEY: 2-of-3 orgs must endorse every transaction
     Endorsement:
       Type: ImplicitMeta
       Rule: "MAJORITY Endorsement"
@@ -151,7 +152,7 @@ Channel: &ChannelDefaults
     <<: *ChannelCapabilities
 
 Profiles:
-  LogisticsOrdererGenesis:
+  ThreeOrgsOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
@@ -160,18 +161,18 @@ Profiles:
     Consortiums:
       DLNConsortium:
         Organizations:
-          - *Shipper
-          - *Carrier
-          - *Customs
+          - *Org1
+          - *Org2
+          - *Org3
 
-  LogisticsChannel:
+  ThreeOrgsChannel:
     Consortium: DLNConsortium
     <<: *ChannelDefaults
     Application:
       <<: *ApplicationDefaults
       Organizations:
-        - *Shipper
-        - *Carrier
-        - *Customs
+        - *Org1
+        - *Org2
+        - *Org3
       Capabilities:
         <<: *ApplicationCapabilities

@@ -75,7 +75,7 @@ export default function Dashboard() {
           <p className="cf-microcopy">3D logistics platform interface</p>
           <h1 className="cf-panel-title">Shared visibility for every shipment handoff.</h1>
           <p className="cf-panel-subtitle">
-            This UI brings the ChainFreight concept into DLN-Lite: a cinematic operations layer with
+            This UI brings the Cargo Intel concept into DLN-Lite: a cinematic operations layer with
             blockchain verification, predictive risk scoring and live exception tracking in one place.
           </p>
 

@@ -5,24 +5,27 @@
 
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
 const mlService = require("../services/mlService");
+const { getDatabaseMode } = require("../utils/db");
 
 router.get("/", async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? "ok" : "down";
+  const dbMode = getDatabaseMode();
+  const dbStatus = dbMode === "mongodb" ? "ok" : dbMode === "memory" ? "fallback" : "down";
   const mlStatus = await mlService.healthCheck();
 
-  const allOk = dbStatus === "ok" && mlStatus.status === "ok";
+  const apiStatus = "ok";
+  const overallStatus = dbStatus === "ok" && mlStatus.status === "ok" ? "healthy" : "degraded";
 
-  res.status(allOk ? 200 : 503).json({
-    status: allOk ? "healthy" : "degraded",
+  res.status(200).json({
+    status: overallStatus,
     timestamp: new Date().toISOString(),
     services: {
-      api: "ok",
+      api: apiStatus,
       mongodb: dbStatus,
       mlService: mlStatus.status,
       blockchain: "check fabric logs", // Fabric has its own health endpoint
     },
+    storageMode: dbMode,
   });
 });
 

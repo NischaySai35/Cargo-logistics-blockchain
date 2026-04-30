@@ -101,13 +101,9 @@ router.post(
       });
 
       // Kick off initial ML prediction asynchronously
-      mlService.predictDelay(blockchainRecord)
-        .then(async (prediction) => {
-          await fabricService.updateDelayRisk(shipmentId, prediction.delay_probability);
-        })
-        .catch((error) => {
-          logger.warn(`Initial ML prediction skipped for ${shipmentId}: ${error.message}`);
-        });
+      mlService.predictDelay(blockchainRecord).then(async (prediction) => {
+        await fabricService.updateDelayRisk(shipmentId, prediction.delay_probability);
+      });
 
       res.status(201).json({
         success: true,

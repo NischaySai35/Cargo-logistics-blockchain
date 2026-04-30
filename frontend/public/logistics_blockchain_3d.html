@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChainFreight — 3D Logistics Platform</title>
+<title>Cargo Intel — 3D Logistics Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
 <style>
 :root {
   --navy: #04091a;
@@ -33,6 +34,30 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
 
 /* ─── LANDING ─── */
 #landing{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
+.landing-globe-wrap{
+  position:absolute;
+  left:-18vw;
+  top:50%;
+  width:min(88vw, 1220px);
+  aspect-ratio:1;
+  transform:translateY(-50%);
+  z-index:1;
+  opacity:0.2;
+  pointer-events:none;
+  filter:blur(0.2px) saturate(0.9);
+}
+#landing-globe{
+  width:100%;
+  height:100%;
+}
+.landing-globe-wrap::after{
+  content:'';
+  position:absolute;
+  inset:12%;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 45%, rgba(0,212,255,0) 72%);
+  filter:blur(28px);
+}
 .logo{display:flex;align-items:center;gap:12px;margin-bottom:2rem;}
 .logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;}
 .logo-text{font-size:1.5rem;font-weight:800;background:linear-gradient(90deg,var(--cyan),var(--blue2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px;}
@@ -93,6 +118,14 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
 @media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr;}}
+@media(max-width:900px){
+  .landing-globe-wrap{
+    left:-36vw;
+    top:48%;
+    width:min(138vw, 980px);
+    opacity:0.16;
+  }
+}
 .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;backdrop-filter:blur(20px);}
 .card-header{font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--text2);font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
 .metric{font-size:2rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--cyan);}
@@ -273,20 +306,23 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
 
 <!-- ═══════════════ LANDING ═══════════════ -->
 <div id="landing" class="screen active">
+  <div class="landing-globe-wrap" aria-hidden="true">
+    <div id="landing-globe"></div>
+  </div>
   <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;max-width:800px;margin:0 auto;">
-    <div class="live-ticker"><span class="dot-ping"></span>LIVE: 2,847 shipments tracked on-chain</div>
+    <div class="live-ticker" id="landing-live-ticker"><span class="dot-ping"></span>LIVE: loading shipment network…</div>
     <div class="logo">
       <div class="logo-icon">🌐</div>
-      <div class="logo-text">ChainFreight</div>
+      <div class="logo-text">Cargo Intel</div>
     </div>
     <div class="hero-tag">Blockchain Logistics Platform</div>
     <h1 class="hero-title">Global Trade,<br>On the Chain</h1>
     <p class="hero-sub">End-to-end shipment visibility with immutable blockchain records, AI-powered disruption alerts, and real-time cargo tracking across all roles.</p>
     <div class="stats-row">
-      <div class="stat-item"><div class="stat-num">142K+</div><div class="stat-lbl">Shipments</div></div>
-      <div class="stat-item"><div class="stat-num">98.7%</div><div class="stat-lbl">On-time</div></div>
-      <div class="stat-item"><div class="stat-num">56</div><div class="stat-lbl">Ports</div></div>
-      <div class="stat-item"><div class="stat-num">0</div><div class="stat-lbl">Fraud</div></div>
+      <div class="stat-item"><div class="stat-num" id="landing-stat-shipments">0</div><div class="stat-lbl">Shipments</div></div>
+      <div class="stat-item"><div class="stat-num" id="landing-stat-ontime">0%</div><div class="stat-lbl">On-time</div></div>
+      <div class="stat-item"><div class="stat-num" id="landing-stat-ports">0</div><div class="stat-lbl">Ports</div></div>
+      <div class="stat-item"><div class="stat-num" id="landing-stat-alerts">0</div><div class="stat-lbl">High Risk</div></div>
     </div>
     <div style="font-size:0.85rem;color:var(--text2);margin-bottom:1rem;font-weight:600;">Select your role to get started</div>
     <div class="role-cards">
@@ -332,7 +368,7 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
 <!-- ═══════════════ APP SHELL ═══════════════ -->
 <div id="app" class="screen">
   <div class="topbar">
-    <div class="topbar-logo">⛓ ChainFreight</div>
+    <div class="topbar-logo">⛓ Cargo Intel</div>
     <div class="nav-tabs" id="nav-tabs"></div>
     <div class="user-badge">
       <div class="user-dot"></div>
@@ -370,8 +406,8 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
         <div class="form-grid">
           <div class="field-inline"><label>Container ID</label><input type="text" id="f-container" placeholder="MSCU7893421" /></div>
           <div class="field-inline"><label>Carrier</label><select id="f-carrier"><option>MSC Mediterranean</option><option>Maersk Line</option><option>COSCO Shipping</option><option>CMA CGM</option><option>Evergreen Marine</option></select></div>
-          <div class="field-inline"><label>Origin Port</label><input type="text" id="f-origin" placeholder="Shanghai, CN" /></div>
-          <div class="field-inline"><label>Destination Port</label><input type="text" id="f-dest" placeholder="Rotterdam, NL" /></div>
+          <div class="field-inline"><label>Origin Port</label><select id="f-origin"></select></div>
+          <div class="field-inline"><label>Destination Port</label><select id="f-dest"></select></div>
           <div class="field-inline"><label>Cargo Type</label><select id="f-cargo"><option>Electronics</option><option>Machinery</option><option>Textiles</option><option>Chemicals</option><option>Food & Beverages</option><option>Automotive Parts</option></select></div>
           <div class="field-inline"><label>Weight (MT)</label><input type="number" id="f-weight" placeholder="24.5" /></div>
           <div class="field-inline"><label>Estimated Arrival</label><input type="date" id="f-eta" /></div>
@@ -432,7 +468,10 @@ body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--text);min-
       </div>
 
       <div class="card">
-        <div class="card-header">📅 Shipment Timeline — MSCU7893421</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="card-header" id="carrier-timeline-title">📅 Shipment Timeline</div>
+          <select id="carrier-timeline-select" onchange="setCarrierTimelineShipment(this.value)" style="min-width:280px;"></select>
+        </div>
         <div class="timeline" id="carrier-timeline" style="margin-top:0.5rem;">
         </div>
       </div>
@@ -510,6 +549,8 @@ let analyticsRoutes = [];
 let disruptionSeed = 0;
 let dataMode = "live";
 let notifications = [];
+let selectedCarrierTimelineShipmentId = "";
+let selectedRouteShipmentId = "";
 let chatbotOpen = false;
 let chatbotHistory = [
   {
@@ -517,6 +558,169 @@ let chatbotHistory = [
     content: "I am your logistics copilot. I can explain shipment status, carrier milestones, customs outcomes, and dashboard data using the records available in this system.",
   },
 ];
+
+const SEA_PORTS = [
+  "Antwerp, BE",
+  "Auckland, NZ",
+  "Balboa, PA",
+  "Bangkok, TH",
+  "Barcelona, ES",
+  "Busan, KR",
+  "Cape Town, ZA",
+  "Chennai, IN",
+  "Colombo, LK",
+  "Dubai, AE",
+  "Durban, ZA",
+  "Felixstowe, UK",
+  "Hamburg, DE",
+  "Hong Kong, HK",
+  "Houston, US",
+  "Jebel Ali, AE",
+  "Jakarta, ID",
+  "Kaohsiung, TW",
+  "Klang, MY",
+  "Laem Chabang, TH",
+  "Le Havre, FR",
+  "Los Angeles, US",
+  "Manila, PH",
+  "Melbourne, AU",
+  "Mumbai, IN",
+  "Mundra, IN",
+  "New York, US",
+  "Nhava Sheva, IN",
+  "Osaka, JP",
+  "Piraeus, GR",
+  "Qingdao, CN",
+  "Rotterdam, NL",
+  "Salalah, OM",
+  "Santos, BR",
+  "Seattle, US",
+  "Shanghai, CN",
+  "Shenzhen, CN",
+  "Singapore, SG",
+  "Tanjung Pelepas, MY",
+  "Tokyo, JP",
+  "Valencia, ES",
+  "Vancouver, CA",
+  "Yantian, CN",
+];
+
+const ROUTE_TEMPLATES = {
+  default: [
+    {
+      name: "Balanced Ocean Route",
+      ports: ["Origin Port", "Singapore, SG", "Destination Port"],
+      distance: 17800,
+      weather: "moderate",
+      stops: 1,
+      originCongestion: 0.46,
+      destinationCongestion: 0.42,
+      carrierRate: 0.24,
+      routeAvgDelayDays: 3.2,
+      note: "Balanced transit with a major hub transfer.",
+    },
+    {
+      name: "Low-Risk Diversion",
+      ports: ["Origin Port", "Colombo, LK", "Jebel Ali, AE", "Destination Port"],
+      distance: 19600,
+      weather: "clear",
+      stops: 2,
+      originCongestion: 0.34,
+      destinationCongestion: 0.31,
+      carrierRate: 0.17,
+      routeAvgDelayDays: 2.4,
+      note: "Longer path, but uses less congested ports and calmer weather windows.",
+    },
+    {
+      name: "Fast Direct Service",
+      ports: ["Origin Port", "Destination Port"],
+      distance: 16200,
+      weather: "storm",
+      stops: 0,
+      originCongestion: 0.58,
+      destinationCongestion: 0.49,
+      carrierRate: 0.28,
+      routeAvgDelayDays: 4.1,
+      note: "Shortest distance, but more exposed to weather and schedule volatility.",
+    },
+  ],
+  "Shanghai, CN|Rotterdam, NL": [
+    {
+      name: "Suez Mainline",
+      ports: ["Shanghai, CN", "Singapore, SG", "Suez Transit", "Rotterdam, NL"],
+      distance: 19200,
+      weather: "moderate",
+      stops: 2,
+      originCongestion: 0.52,
+      destinationCongestion: 0.47,
+      carrierRate: 0.26,
+      routeAvgDelayDays: 3.8,
+      note: "Fastest regular Europe lane with moderate congestion exposure.",
+    },
+    {
+      name: "Cape Diversion",
+      ports: ["Shanghai, CN", "Colombo, LK", "Cape Town, ZA", "Rotterdam, NL"],
+      distance: 24400,
+      weather: "clear",
+      stops: 2,
+      originCongestion: 0.33,
+      destinationCongestion: 0.35,
+      carrierRate: 0.18,
+      routeAvgDelayDays: 2.7,
+      note: "Lower disruption risk, but adds distance and sailing time.",
+    },
+    {
+      name: "Priority Europe Express",
+      ports: ["Shanghai, CN", "Singapore, SG", "Rotterdam, NL"],
+      distance: 18100,
+      weather: "storm",
+      stops: 1,
+      originCongestion: 0.61,
+      destinationCongestion: 0.51,
+      carrierRate: 0.29,
+      routeAvgDelayDays: 4.4,
+      note: "Shortest plan with premium service, but highest weather and berth risk.",
+    },
+  ],
+  "Singapore, SG|Los Angeles, US": [
+    {
+      name: "Pacific Mainline",
+      ports: ["Singapore, SG", "Kaohsiung, TW", "Los Angeles, US"],
+      distance: 14500,
+      weather: "moderate",
+      stops: 1,
+      originCongestion: 0.43,
+      destinationCongestion: 0.56,
+      carrierRate: 0.24,
+      routeAvgDelayDays: 3.5,
+      note: "Standard Pacific crossing with dependable carrier coverage.",
+    },
+    {
+      name: "Northern Pacific Buffer",
+      ports: ["Singapore, SG", "Tokyo, JP", "Vancouver, CA", "Los Angeles, US"],
+      distance: 16800,
+      weather: "clear",
+      stops: 2,
+      originCongestion: 0.31,
+      destinationCongestion: 0.37,
+      carrierRate: 0.19,
+      routeAvgDelayDays: 2.6,
+      note: "Safer weather window and lower port congestion, with an extra handoff.",
+    },
+    {
+      name: "Fast West Coast Express",
+      ports: ["Singapore, SG", "Los Angeles, US"],
+      distance: 13600,
+      weather: "storm",
+      stops: 0,
+      originCongestion: 0.54,
+      destinationCongestion: 0.62,
+      carrierRate: 0.3,
+      routeAvgDelayDays: 4.8,
+      note: "Shortest route, but exposed to volatile Pacific weather and berth queues.",
+    },
+  ],
+};
 
 const FALLBACK_RAW_SHIPMENTS = [
   {
@@ -843,6 +1047,43 @@ function persistShipments(next = shipments) {
   } catch {}
 }
 
+function populateSeaPortOptions() {
+  const originSelect = document.getElementById("f-origin");
+  const destinationSelect = document.getElementById("f-dest");
+  if (!originSelect || !destinationSelect) return;
+
+  const options = SEA_PORTS.map((port) => `<option value="${port}">${port}</option>`).join("");
+  originSelect.innerHTML = options;
+  destinationSelect.innerHTML = options;
+
+  if (!originSelect.value) originSelect.value = "Shanghai, CN";
+  if (!destinationSelect.value) destinationSelect.value = "Rotterdam, NL";
+}
+
+function updateLandingStats() {
+  const shipmentCount = shipments.length;
+  const uniquePorts = new Set(
+    shipments.flatMap((shipment) => [shipment.origin, shipment.dest]).filter(Boolean)
+  ).size;
+  const highRiskCount = shipments.filter((shipment) => (shipment.delayRiskScore || 0) >= 0.5).length;
+  const onTimeRate = analyticsSummary?.onTimeRate
+    ?? (shipmentCount ? shipments.filter((shipment) => shipment.status !== "rejected").length / shipmentCount : 0);
+
+  const ticker = document.getElementById("landing-live-ticker");
+  const shipmentsEl = document.getElementById("landing-stat-shipments");
+  const onTimeEl = document.getElementById("landing-stat-ontime");
+  const portsEl = document.getElementById("landing-stat-ports");
+  const alertsEl = document.getElementById("landing-stat-alerts");
+
+  if (ticker) {
+    ticker.innerHTML = `<span class="dot-ping"></span>LIVE: ${shipmentCount} shipments tracked on-chain`;
+  }
+  if (shipmentsEl) shipmentsEl.textContent = String(shipmentCount);
+  if (onTimeEl) onTimeEl.textContent = `${Math.round((onTimeRate || 0) * 100)}%`;
+  if (portsEl) portsEl.textContent = String(uniquePorts);
+  if (alertsEl) alertsEl.textContent = String(highRiskCount);
+}
+
 function restoreCachedShipments() {
   try {
     const raw = window.localStorage.getItem(SHIPMENT_STORAGE_KEY);
@@ -965,6 +1206,7 @@ function deriveAnalyticsFromShipments(list) {
   analyticsSummary = summary;
   analyticsRisk = risk;
   analyticsRoutes = routes;
+  updateLandingStats();
 }
 
 async function loadShipments() {
@@ -978,6 +1220,7 @@ async function loadShipments() {
     persistShipments();
     dataMode = "fallback";
   }
+  updateLandingStats();
   return shipments;
 }
 
@@ -1000,7 +1243,9 @@ async function loadAnalytics() {
 
   if (!analyticsSummary || !analyticsRoutes.length || !analyticsRisk) {
     deriveAnalyticsFromShipments(shipments);
+    return;
   }
+  updateLandingStats();
 }
 
 async function hydrateData() {
@@ -1014,6 +1259,7 @@ async function hydrateData() {
 const wCanvas = document.getElementById('world-canvas');
 const wCtx = wCanvas.getContext('2d');
 let animT = 0;
+let landingGlobe = null;
 const routes = [
   {from:[0.78,0.38],to:[0.32,0.42]},{from:[0.15,0.38],to:[0.55,0.35]},
   {from:[0.60,0.45],to:[0.30,0.30]},{from:[0.45,0.55],to:[0.85,0.40]},
@@ -1049,6 +1295,28 @@ function drawWorld(){
 }
 window.addEventListener('resize',resizeWCanvas);
 resizeWCanvas();drawWorld();
+
+function initLandingGlobe() {
+  const globeRoot = document.getElementById('landing-globe');
+  if (!globeRoot || typeof Globe !== 'function' || landingGlobe) return;
+
+  landingGlobe = Globe({ rendererConfig: { alpha: true, antialias: true } })(globeRoot)
+    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+    .backgroundColor('rgba(0,0,0,0)')
+    .showAtmosphere(true)
+    .atmosphereColor('#5dd6ff')
+    .atmosphereAltitude(0.16);
+
+  landingGlobe.pointOfView({ lat: 20, lng: 0, altitude: 2.2 });
+
+  const controls = landingGlobe.controls();
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.55;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+}
+
+initLandingGlobe();
 
 // ═══════════════════════════════════════════
 // 3D SHIPPER SCENE — Warehouse → Truck → Port
@@ -1287,7 +1555,7 @@ function drawTruck(ctx, x, y, w, h) {
   ctx.fillRect(x, y+h*0.2, w*0.58, h*0.65);
   ctx.strokeStyle='rgba(0,180,255,0.3)';ctx.lineWidth=1;
   ctx.strokeRect(x, y+h*0.2, w*0.58, h*0.65);
-  // ChainFreight logo
+  // Cargo Intel logo
   ctx.fillStyle='rgba(0,180,255,0.6)';
   ctx.font=`bold ${h*0.15}px Syne`;
   ctx.fillText('CF', x+w*0.1, y+h*0.6);
@@ -2013,6 +2281,24 @@ function shipmentStatusBadge(shipment) {
   if (!shipment) return statusEl("pending");
   return `<span class="status status-${shipment.status}">${shipmentStatusLabel(shipment)}</span>`;
 }
+
+function statusPriority(shipment) {
+  if (!shipment) return 99;
+  if (shipment.status === "pending") return 0;
+  if (shipment.status === "transit") return 1;
+  if (shipment.status === "rejected") return 2;
+  if (shipment.status === "cleared") return 3;
+  return 4;
+}
+
+function sortActionableShipments(list = []) {
+  return [...list].sort((a, b) => {
+    const priorityDiff = statusPriority(a) - statusPriority(b);
+    if (priorityDiff !== 0) return priorityDiff;
+    return shipmentSortTime(b) - shipmentSortTime(a);
+  });
+}
+
 function renderShipperList(){
   const el=document.getElementById('shipper-list');if(!el)return;
   el.innerHTML=shipments.map(s=>`
@@ -2033,7 +2319,8 @@ function renderCarrierList(){
   const alertCount = shipments.filter(s => (s.delayRiskScore || 0) >= 0.5 && s.status !== 'cleared').length;
   const alertEl = document.getElementById('alert-count');
   if (alertEl) alertEl.textContent = alertCount;
-  el.innerHTML=shipments.map(s=>`
+  const visibleShipments = sortActionableShipments(shipments.filter(s => s.status !== 'cleared'));
+  el.innerHTML=visibleShipments.map(s=>`
     <div class="shipment-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
       <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
         <div class="ship-id">${s.id} · ${s.container}</div>${shipmentStatusBadge(s)}
@@ -2060,10 +2347,11 @@ function renderCustomsList(){
   let incoming=shipments.filter(s=>s.status!=='cleared'&&s.status!=='rejected');
   let cleared=shipments.filter(s=>s.status==='cleared');
   let rejected=shipments.filter(s=>s.status==='rejected');
+  const orderedShipments = sortActionableShipments(shipments);
   document.getElementById('c-incoming').textContent=incoming.length;
   document.getElementById('c-cleared').textContent=cleared.length;
   document.getElementById('c-rejected').textContent=rejected.length;
-  el.innerHTML=shipments.map(s=>`
+  el.innerHTML=orderedShipments.map(s=>`
     <div style="margin-bottom:1rem;">
       <div class="verify-box">
         <div class="verify-row"><span class="verify-key">Shipment ID</span><span class="verify-val">${s.id}</span></div>
@@ -2217,12 +2505,27 @@ function renderDisruptionsSection(targetId, reuseCarrierFeed = false) {
 
 function renderCarrierTimeline() {
   const mount = document.getElementById("carrier-timeline");
+  const selector = document.getElementById("carrier-timeline-select");
+  const title = document.getElementById("carrier-timeline-title");
   if (!mount) return;
-  const shipment = shipments.find(s => s.status !== "cleared") || shipments[0];
+  const eligibleShipments = sortActionableShipments(shipments);
+  if (selector) {
+    selector.innerHTML = eligibleShipments.length
+      ? eligibleShipments.map((shipment) => `<option value="${shipment.id}">${shipment.id} · ${shipment.container} · ${shipment.origin} → ${shipment.dest}</option>`).join("")
+      : `<option value="">No shipments available</option>`;
+  }
+  if (!selectedCarrierTimelineShipmentId || !eligibleShipments.some((shipment) => shipment.id === selectedCarrierTimelineShipmentId)) {
+    selectedCarrierTimelineShipmentId = eligibleShipments[0]?.id || "";
+  }
+  if (selector) selector.value = selectedCarrierTimelineShipmentId;
+
+  const shipment = eligibleShipments.find((item) => item.id === selectedCarrierTimelineShipmentId) || eligibleShipments[0];
   if (!shipment) {
+    if (title) title.textContent = "📅 Shipment Timeline";
     mount.innerHTML = `<div class="feed-item"><div class="feed-text">No shipments available yet.</div></div>`;
     return;
   }
+  if (title) title.textContent = `📅 Shipment Timeline — ${shipment.id}`;
   const items = shipment.events?.length ? shipment.events : [{ eventType: "SHIPMENT_CREATED", timestamp: new Date().toISOString(), description: "Shipment registered" }];
   mount.innerHTML = items.map((event, index) => `
     <div class="tl-item ${index < items.length - 1 || shipment.status === 'cleared' ? 'done' : ''}">
@@ -2231,66 +2534,190 @@ function renderCarrierTimeline() {
     </div>`).join("");
 }
 
+function setCarrierTimelineShipment(shipmentId) {
+  selectedCarrierTimelineShipmentId = shipmentId || "";
+  renderCarrierTimeline();
+}
+
+function routeTemplateKey(origin, destination) {
+  return `${origin || ""}|${destination || ""}`;
+}
+
+function interpolateDistance(shipment, template, offset = 0) {
+  const baseWeight = Number(shipment?.weight || 0);
+  const weightFactor = Number.isFinite(baseWeight) ? Math.min(baseWeight * 18, 1200) : 0;
+  return Math.round((template.distance || 16000) + weightFactor + offset);
+}
+
+function buildRouteCandidates(shipment) {
+  if (!shipment) return [];
+  const key = routeTemplateKey(shipment.origin, shipment.dest);
+  const templates = ROUTE_TEMPLATES[key] || ROUTE_TEMPLATES.default;
+  return templates.map((template, index) => ({
+    ...template,
+    shipmentId: shipment.id,
+    carrier: shipment.carrier,
+    cargo: shipment.cargo,
+    weightKg: Math.round(Number(shipment.weight || 0) * 1000) || 12000,
+    origin: shipment.origin,
+    destination: shipment.dest,
+    distance: interpolateDistance(shipment, template, index * 120),
+    ports: template.ports.map((port) => port === "Origin Port" ? shipment.origin : port === "Destination Port" ? shipment.dest : port),
+  }));
+}
+
+function populateRouteShipmentSelector() {
+  const selector = document.getElementById("route-shipment");
+  if (!selector) return;
+  const eligibleShipments = sortActionableShipments(shipments);
+  selector.innerHTML = eligibleShipments.length
+    ? eligibleShipments.map((shipment) => `<option value="${shipment.id}">${shipment.id} · ${shipment.origin} → ${shipment.dest} · ${shipment.cargo}</option>`).join("")
+    : `<option value="">No shipments available</option>`;
+  if (!selectedRouteShipmentId || !eligibleShipments.some((shipment) => shipment.id === selectedRouteShipmentId)) {
+    selectedRouteShipmentId = eligibleShipments[0]?.id || "";
+  }
+  selector.value = selectedRouteShipmentId;
+}
+
+function setRouteShipment(shipmentId) {
+  selectedRouteShipmentId = shipmentId || "";
+  renderRoutingSection("shipper-routing-section");
+}
+
+function estimatePortCongestion(port = "") {
+  const lowered = port.toLowerCase();
+  if (/singapore|rotterdam|shanghai|los angeles|hamburg/.test(lowered)) return 0.62;
+  if (/dubai|busan|shenzhen|antwerp|mumbai/.test(lowered)) return 0.48;
+  return 0.34;
+}
+
+function estimateWeatherSeverity(shipment) {
+  const routeText = `${shipment?.origin || ""} ${shipment?.dest || ""}`.toLowerCase();
+  if (/singapore|shanghai|shenzhen|manila|kaohsiung/.test(routeText)) return "storm";
+  if (/rotterdam|hamburg|felixstowe|antwerp/.test(routeText)) return "moderate";
+  return "clear";
+}
+
+function estimateCarrierDelayRate(carrier = "") {
+  const lowered = carrier.toLowerCase();
+  if (lowered.includes("msc")) return 0.27;
+  if (lowered.includes("maersk")) return 0.21;
+  if (lowered.includes("cosco")) return 0.24;
+  if (lowered.includes("cma")) return 0.23;
+  return 0.19;
+}
+
+function buildCarrierRiskEnrichment(shipment) {
+  const phase = shipmentPhase(shipment);
+  const numStops = phase === "ARRIVED" ? 3 : phase === "CHECKPOINT_2" ? 2 : phase === "CHECKPOINT_1" ? 2 : phase === "DEPARTED_PORT" ? 1 : 0;
+  return {
+    originCongestion: estimatePortCongestion(shipment.origin),
+    destinationCongestion: estimatePortCongestion(shipment.dest),
+    weatherSeverity: estimateWeatherSeverity(shipment),
+    carrierDelayRate: estimateCarrierDelayRate(shipment.carrier),
+    routeAvgDelayDays: Math.max(2, Math.round((shipment.delayRiskScore || 0.25) * 8 + numStops)),
+    distanceKm: Math.max(6000, 9000 + Math.round((Number(shipment.weight || 0) || 10) * 140) + numStops * 1800),
+    numStops,
+    cargoType: shipment.cargo,
+    weightKg: Math.round((Number(shipment.weight || 0) || 10) * 1000),
+  };
+}
+
 async function runRouteCheck() {
-  const origin = document.getElementById("route-origin").value;
-  const destination = document.getElementById("route-dest").value;
-  const cargo = document.getElementById("route-cargo").value;
+  const shipmentId = document.getElementById("route-shipment").value;
   const output = document.getElementById("route-results");
+  const shipment = shipments.find((item) => item.id === shipmentId);
+  if (!shipment) {
+    output.innerHTML = `<div class="feed-item"><div class="feed-text">Select a shipment to optimize its route.</div></div>`;
+    return;
+  }
   output.innerHTML = `<div class="feed-item"><div class="feed-text">Running route comparison...</div></div>`;
 
-  const routes = [
-    { name: "Current Route", via: "Suez Canal", distance: 19000, weather: "moderate", stops: 2, carrierRate: 0.3 },
-    { name: "Cape Route", via: "South Africa", distance: 24800, weather: "clear", stops: 1, carrierRate: 0.18 },
-    { name: "Fast Direct", via: "Priority Service", distance: 17600, weather: "clear", stops: 0, carrierRate: 0.24 },
-  ];
+  const routes = buildRouteCandidates(shipment);
 
   const predictions = await Promise.all(routes.map(async route => {
     try {
       const res = await apiRequest("/ml/predict-manual", {
         method: "POST",
         body: JSON.stringify({
-          origin_port: origin,
-          destination_port: destination,
-          carrier: "OceanFreight Co",
-          cargo_type: cargo,
-          weight_kg: 12000,
+          origin_port: route.origin,
+          destination_port: route.destination,
+          carrier: route.carrier,
+          cargo_type: route.cargo,
+          weight_kg: route.weightKg,
           distance_km: route.distance,
           num_stops: route.stops,
-          origin_congestion: 0.5,
-          destination_congestion: 0.4,
+          origin_congestion: route.originCongestion,
+          destination_congestion: route.destinationCongestion,
           weather_severity: route.weather,
           carrier_delay_rate: route.carrierRate,
-          route_avg_delay_days: 3,
+          route_avg_delay_days: route.routeAvgDelayDays,
         }),
       });
-      return { ...route, probability: res.prediction?.delay_probability || 0 };
+      return { ...route, prediction: res.prediction || {} };
     } catch {
-      return { ...route, probability: 0.5 };
+      return {
+        ...route,
+        prediction: {
+          delay_probability: 0.5,
+          risk_level: "MEDIUM",
+          predicted_delay_days: 3,
+          top_factors: [],
+        },
+      };
     }
   }));
 
-  predictions.sort((a, b) => a.probability - b.probability);
-  output.innerHTML = predictions.map((route, index) => `
-    <div class="shipment-row">
+  predictions.sort((a, b) => (a.prediction?.delay_probability || 1) - (b.prediction?.delay_probability || 1));
+  output.innerHTML = `
+    <div class="verify-box" style="margin-bottom:1rem;">
+      <div class="verify-row"><span class="verify-key">Shipment</span><span class="verify-val">${shipment.id}</span></div>
+      <div class="verify-row"><span class="verify-key">Current Route</span><span class="verify-val">${shipment.origin} → ${shipment.dest}</span></div>
+      <div class="verify-row"><span class="verify-key">Cargo</span><span class="verify-val">${shipment.cargo} · ${shipment.weight} MT</span></div>
+      <div class="verify-row"><span class="verify-key">Carrier</span><span class="verify-val">${shipment.carrier}</span></div>
+    </div>
+    ${predictions.map((route, index) => {
+      const probability = route.prediction?.delay_probability || 0;
+      const riskLevel = route.prediction?.risk_level || "UNKNOWN";
+      const delayDays = route.prediction?.predicted_delay_days || 0;
+      const factors = (route.prediction?.top_factors || []).map((factor) => factor.factor).slice(0, 3).join(", ");
+      return `
+    <div class="shipment-row" style="align-items:flex-start;">
       <div>
-        <div class="ship-id">${index === 0 ? "✓ Recommended" : route.name}</div>
-        <div class="ship-route"><span>${route.via}</span> · <span>${route.distance.toLocaleString()} km</span></div>
+        <div class="ship-id">${index === 0 ? "✓ Recommended Route" : route.name}</div>
+        <div class="ship-route"><span>${route.ports.join(" → ")}</span></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">${route.distance.toLocaleString()} km · ${route.stops} stop${route.stops === 1 ? "" : "s"} · weather ${route.weather}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">${route.note}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">Top factors: ${factors || "Distance, weather, and congestion mix"}</div>
       </div>
-      <div style="font-size:12px;color:${route.probability >= 0.7 ? 'var(--red)' : route.probability >= 0.4 ? 'var(--amber)' : 'var(--green)'};">Risk ${Math.round(route.probability * 100)}%</div>
-    </div>`).join("");
+      <div style="text-align:right;min-width:120px;">
+        <div style="font-size:12px;color:${probability >= 0.7 ? 'var(--red)' : probability >= 0.4 ? 'var(--amber)' : 'var(--green)'};">Risk ${Math.round(probability * 100)}%</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">${riskLevel}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">Delay ${delayDays}d</div>
+      </div>
+    </div>`;
+    }).join("")}`;
 }
 
 function renderRoutingSection(targetId) {
   const el = document.getElementById(targetId); if (!el) return;
+  const eligibleShipments = sortActionableShipments(shipments);
+  if (!selectedRouteShipmentId || !eligibleShipments.some((shipment) => shipment.id === selectedRouteShipmentId)) {
+    selectedRouteShipmentId = eligibleShipments[0]?.id || "";
+  }
+  const shipmentOptions = eligibleShipments.map((shipment) => `<option value="${shipment.id}" ${shipment.id === selectedRouteShipmentId ? "selected" : ""}>${shipment.id} · ${shipment.origin} → ${shipment.dest} · ${shipment.cargo}</option>`).join("");
+  const selectedShipment = eligibleShipments.find((shipment) => shipment.id === selectedRouteShipmentId);
   el.innerHTML = `
     <div class="card">
       <div class="card-header">🗺 Route Optimizer</div>
       <div class="form-grid" style="margin-bottom:1rem;">
-        <div class="field-inline"><label>Origin</label><input id="route-origin" value="Shanghai, CN" /></div>
-        <div class="field-inline"><label>Destination</label><input id="route-dest" value="Rotterdam, NL" /></div>
-        <div class="field-inline"><label>Cargo</label><input id="route-cargo" value="Electronics" /></div>
+        <div class="field-inline form-full"><label>Shipment</label><select id="route-shipment" onchange="setRouteShipment(this.value)">${shipmentOptions || '<option value="">No shipments available</option>'}</select></div>
+        <div class="field-inline"><label>Origin</label><input id="route-origin" value="${selectedShipment?.origin || 'N/A'}" disabled /></div>
+        <div class="field-inline"><label>Destination</label><input id="route-dest" value="${selectedShipment?.dest || 'N/A'}" disabled /></div>
+        <div class="field-inline"><label>Cargo</label><input id="route-cargo" value="${selectedShipment?.cargo || 'N/A'}" disabled /></div>
       </div>
-      <button class="action-btn approve" style="padding:10px 14px;" onclick="runRouteCheck()">Run route analysis</button>
+      <div class="portal-section-copy" style="margin-bottom:1rem;">The optimizer compares alternative port-to-port paths, scores them with the ML delay model, and recommends the route with the lowest predicted risk under current conditions.</div>
+      <button class="action-btn approve" style="padding:10px 14px;" onclick="runRouteCheck()">Run ML route optimization</button>
       <div id="route-results" style="margin-top:1rem;"></div>
     </div>`;
 }
@@ -2298,9 +2725,15 @@ function renderRoutingSection(targetId) {
 async function runCarrierRisk() {
   const shipmentId = document.getElementById("carrier-risk-shipment").value;
   const output = document.getElementById("carrier-risk-output");
+  const shipment = shipments.find(s => s.id === shipmentId);
+  if (!shipment) {
+    output.innerHTML = `<div class="feed-item"><div class="feed-text">Select a shipment to evaluate.</div></div>`;
+    return;
+  }
+  const enrichment = buildCarrierRiskEnrichment(shipment);
   output.innerHTML = `<div class="feed-item"><div class="feed-text">Running ML risk prediction...</div></div>`;
   try {
-    const res = await apiRequest(`/ml/predict/${shipmentId}`, { method: "POST", body: JSON.stringify({}) });
+    const res = await apiRequest(`/ml/predict/${shipmentId}`, { method: "POST", body: JSON.stringify(enrichment) });
     const p = res.prediction || {};
     output.innerHTML = `
       <div class="verify-box">
@@ -2308,12 +2741,16 @@ async function runCarrierRisk() {
         <div class="verify-row"><span class="verify-key">Delay Probability</span><span class="verify-val">${Math.round((p.delay_probability || 0) * 100)}%</span></div>
         <div class="verify-row"><span class="verify-key">Risk Level</span><span class="verify-val">${p.risk_level || "N/A"}</span></div>
         <div class="verify-row"><span class="verify-key">Predicted Delay</span><span class="verify-val">${p.predicted_delay_days || 0} days</span></div>
-      </div>`;
+        <div class="verify-row"><span class="verify-key">Weather</span><span class="verify-val">${enrichment.weatherSeverity}</span></div>
+        <div class="verify-row"><span class="verify-key">Stops</span><span class="verify-val">${enrichment.numStops}</span></div>
+        <div class="verify-row"><span class="verify-key">Distance</span><span class="verify-val">${enrichment.distanceKm.toLocaleString()} km</span></div>
+        <div class="verify-row"><span class="verify-key">Port Congestion</span><span class="verify-val">${Math.round(enrichment.originCongestion * 100)}% / ${Math.round(enrichment.destinationCongestion * 100)}%</span></div>
+      </div>
+      <div class="feed-item"><div class="feed-text"><strong>Top factors:</strong> ${(p.top_factors || []).map((factor) => `${factor.factor} (${Math.round((factor.importance || 0) * 100)}%)`).join(", ") || "Model factors unavailable"}</div></div>`;
     await hydrateData();
     renderCarrierList();
     renderAnalyticsSection("carrier-analytics-section");
   } catch (error) {
-    const shipment = shipments.find(s => s.id === shipmentId);
     const probability = shipment?.delayRiskScore || 0;
     output.innerHTML = `
       <div class="verify-box">
@@ -2321,17 +2758,20 @@ async function runCarrierRisk() {
         <div class="verify-row"><span class="verify-key">Delay Probability</span><span class="verify-val">${Math.round(probability * 100)}%</span></div>
         <div class="verify-row"><span class="verify-key">Risk Level</span><span class="verify-val">${probability >= 0.7 ? "HIGH" : probability >= 0.4 ? "MEDIUM" : "LOW"}</span></div>
         <div class="verify-row"><span class="verify-key">Predicted Delay</span><span class="verify-val">${Math.max(1, Math.round(probability * 10))} days</span></div>
+        <div class="verify-row"><span class="verify-key">Weather</span><span class="verify-val">${enrichment.weatherSeverity}</span></div>
+        <div class="verify-row"><span class="verify-key">Stops</span><span class="verify-val">${enrichment.numStops}</span></div>
       </div>`;
   }
 }
 
 function renderRiskSection(targetId) {
   const el = document.getElementById(targetId); if (!el) return;
-  const options = topRiskShipments().map(s => `<option value="${s.id}">${s.id} · ${s.origin} → ${s.dest}</option>`).join("");
+  const options = sortActionableShipments(shipments).map(s => `<option value="${s.id}">${s.id} · ${s.origin} → ${s.dest}</option>`).join("");
   el.innerHTML = `
     <div class="card">
       <div class="card-header">🤖 Risk Predictor</div>
       <div class="field-inline" style="margin-bottom:1rem;"><label>Shipment</label><select id="carrier-risk-shipment">${options}</select></div>
+      <div class="portal-section-copy" style="margin-bottom:1rem;">Uses live shipment data plus weather, congestion, distance, and route-stop estimates to run the ML delay model.</div>
       <button class="action-btn approve" style="padding:10px 14px;" onclick="runCarrierRisk()">Predict delay risk</button>
       <div id="carrier-risk-output" style="margin-top:1rem;"></div>
     </div>`;
@@ -2368,7 +2808,7 @@ async function verifyCustomsShipment(id) {
 
 function renderVerificationTool(targetId) {
   const el = document.getElementById(targetId); if (!el) return;
-  const options = shipments.slice(0, 8).map(s => `<option value="${s.id}">${s.id} · ${s.container}</option>`).join("");
+  const options = sortActionableShipments(shipments).slice(0, 8).map(s => `<option value="${s.id}">${s.id} · ${s.container}</option>`).join("");
   el.innerHTML = `
     <div class="card">
       <div class="card-header">🧪 Integrity Verification Tool</div>
@@ -2581,6 +3021,7 @@ function showToast(icon,msg){
 
 restoreCachedShipments();
 restoreCachedNotifications();
+populateSeaPortOptions();
 renderChatbotMessages();
 restoreAuthSession();
 </script>

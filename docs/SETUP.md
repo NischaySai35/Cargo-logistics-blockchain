@@ -10,7 +10,6 @@ Install these before starting:
 
 | Tool | Version | Download |
 |------|---------|----------|
-| Docker Desktop | Latest | https://www.docker.com/products/docker-desktop |
 | Node.js | 18+ | https://nodejs.org |
 | Python | 3.10+ | https://python.org |
 | Go | 1.19+ | https://golang.org |
@@ -18,38 +17,7 @@ Install these before starting:
 
 ---
 
-## Option A — Full Stack with Docker Compose (Recommended)
-
-This starts everything except the Fabric blockchain automatically.
-
-```bash
-# 1. Clone the project
-git clone <your-repo-url> dln-lite
-cd dln-lite
-
-# 2. Copy environment file
-cp backend/.env.example backend/.env
-
-# 3. Start all services
-docker-compose up --build
-
-# 4. Seed sample data (in a new terminal)
-cd scripts
-npm install axios
-node seedData.js
-
-# 5. Open dashboard
-open http://localhost:3000
-```
-
-That's it for the non-blockchain demo. Services run at:
-- Frontend:   http://localhost:3000
-- Backend API: http://localhost:4000
-- ML Service:  http://localhost:5000
-
----
-
-## Option B — Run Each Service Manually (Development)
+## Run Each Service Manually (Development)
 
 ### Step 1: ML Service (Python)
 
@@ -78,16 +46,12 @@ npm install
 # Copy environment config
 cp .env.example .env
 
-# Start MongoDB (needs Docker)
-docker run -d -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=dlnpassword \
-  mongo:6
-
 # Start the API server
 npm run dev
 # → Running on http://localhost:4000
 ```
+
+If MongoDB is not available, the backend falls back to an in-memory metadata store for local development.
 
 ### Step 3: Frontend (React)
 
@@ -111,7 +75,7 @@ node seedData.js
 
 ---
 
-## Option C — Full Blockchain Setup (Advanced)
+## Optional Blockchain Setup (Advanced)
 
 Only needed if you want a REAL Hyperledger Fabric network (not just the app).
 
@@ -217,10 +181,10 @@ Base URL: `http://localhost:4000/api`
 - If model not found: run `python ml/train_model.py` first
 
 **MongoDB connection refused**
-- Start MongoDB: `docker run -d -p 27017:27017 mongo:6`
+- Start a local MongoDB instance, or let the backend run with its in-memory fallback for development.
 
 **Fabric network won't start**
-- Make sure Docker is running and has 4GB+ memory allocated
+- Make sure the required Fabric container runtime is available
 - Run `./stop-network.sh` first to clean previous state
 
 **Frontend shows blank page**
@@ -275,6 +239,5 @@ dln-lite/
 │   ├── enrollAdmin.js
 │   └── seedData.js
 ├── docker/fabric-docker-compose.yml
-├── docker-compose.yml
 └── README.md
 ```

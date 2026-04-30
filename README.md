@@ -33,20 +33,25 @@ Built as a final-year dissertation project addressing TradeLens failure points.
 | ML Service | Python + Flask + XGBoost |
 | Frontend | React + Tailwind CSS |
 | Database | MongoDB (off-chain bulk data) |
-| Container | Docker + Docker Compose |
+| Runtime | Local Node.js + Python services |
 
 ## Quick Start
 
 ```bash
-# 1. Start the blockchain network
-cd blockchain/network
-./start-network.sh
+# 1. Start the ML service
+cd ml
+pip install -r requirements.txt
+python app.py
 
-# 2. Start all services
-docker-compose up --build
+# 2. Start the backend API
+cd ../backend
+npm install
+npm start
 
-# 3. Access dashboard
-open http://localhost:3000
+# 3. Start the frontend
+cd ../frontend
+npm install
+npm start
 ```
 
 ## Project Structure
@@ -57,7 +62,6 @@ dln-lite/
 ├── backend/             # Node.js REST API
 ├── ml/                  # Python ML delay prediction service
 ├── frontend/            # React dashboard
-├── docker/              # Docker configs
 ├── tests/               # All test files
 ├── docs/                # Documentation
 └── scripts/             # Utility scripts

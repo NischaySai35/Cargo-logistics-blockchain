@@ -10,7 +10,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 
-const connectDB = require("./utils/db");
+const { connectDB } = require("./utils/db");
 const logger = require("./utils/logger");
 
 const shipmentRoutes = require("./routes/shipmentRoutes");
@@ -63,6 +63,18 @@ app.use("/api/", limiter);
 // ─────────────────────────────────────────────────────────────────────────────
 // Routes
 // ─────────────────────────────────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.status(200).json({
+    service: "Cargo Intel API",
+    status: "ok",
+    docs: {
+      health: "/api/health",
+      shipments: "/api/shipments",
+      analytics: "/api/analytics/summary",
+    },
+  });
+});
+
 app.use("/api/shipments", shipmentRoutes);  // Blockchain + DB shipment operations
 app.use("/api/ml", mlRoutes);               // ML predictions
 app.use("/api/analytics", analyticsRoutes); // Dashboard analytics

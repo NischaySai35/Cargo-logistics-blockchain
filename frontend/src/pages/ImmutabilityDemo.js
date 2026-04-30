@@ -1,13 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getShipment, verifyIntegrity } from "../services/api";
 
-export default function ImmutabilityDemo({ embedded = false }) {
+export default function ImmutabilityDemo({ embedded = false, shipments = [] }) {
   const [shipmentId, setShipmentId] = useState("SHP-001");
   const [original, setOriginal] = useState(null);
   const [tampered, setTampered] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    if (!embedded || shipments.length === 0) return;
+    const latestShipment = [...shipments]
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0];
+    if (latestShipment?.shipmentId && !shipments.some((shipment) => shipment.shipmentId === shipmentId)) {
+      setShipmentId(latestShipment.shipmentId);
+      return;
+    }
+    if (latestShipment?.shipmentId && shipmentId === "SHP-001") {
+      setShipmentId(latestShipment.shipmentId);
+    }
+  }, [embedded, shipmentId, shipments]);
 
   const fetchOriginal = async () => {
     setLoading(true);
@@ -98,7 +111,19 @@ export default function ImmutabilityDemo({ embedded = false }) {
           <div className="cf-card-label">Verification controls</div>
           <div className="cf-field">
             <label>Shipment ID</label>
-            <input className="cf-input" value={shipmentId} onChange={(event) => setShipmentId(event.target.value)} />
+            {embedded && shipments.length ? (
+              <select className="cf-select" value={shipmentId} onChange={(event) => setShipmentId(event.target.value)}>
+                {[...shipments]
+                  .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+                  .map((shipment) => (
+                    <option key={shipment.shipmentId} value={shipment.shipmentId}>
+                      {shipment.shipmentId} · {shipment.origin} to {shipment.destination}
+                    </option>
+                  ))}
+              </select>
+            ) : (
+              <input className="cf-input" value={shipmentId} onChange={(event) => setShipmentId(event.target.value)} />
+            )}
           </div>
           <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <button className="cf-primary-btn" onClick={fetchOriginal}>

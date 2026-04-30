@@ -5,7 +5,7 @@ import { createShipment } from "../services/api";
 const CARGO_TYPES = ["Electronics", "Textiles", "Food", "Chemicals", "Machinery", "General", "Other"];
 const CARRIERS = ["OceanFreight Co", "GlobalShip Ltd", "MarineX", "AquaLine", "SeaRoute Express"];
 
-export default function CreateShipment({ embedded = false }) {
+export default function CreateShipment({ embedded = false, onCreated }) {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -34,6 +34,9 @@ export default function CreateShipment({ embedded = false }) {
     setError(null);
     try {
       const response = await createShipment({ ...form, weightKg: parseFloat(form.weightKg) });
+      if (onCreated) {
+        await onCreated(response.data);
+      }
       navigate(`/shipments/${response.data.shipmentId}`);
     } catch (requestError) {
       setError(requestError.response?.data?.error || requestError.message);

@@ -11,9 +11,9 @@ const STATUS_CONFIG = {
   CREATED: { bg: "rgba(148,163,184,0.12)", text: "#94a3b8", dot: "#64748b", label: "Created" },
 };
 const riskColor = s => s >= 0.7 ? "#ef4444" : s >= 0.4 ? "#f59e0b" : "#22c55e";
-const EVT_ICONS = { SHIPMENT_CREATED: "M12 4v16m8-8H4", DEPARTED_PORT: "M13 10V3L4 14h7v7l9-11h-7z", ARRIVED_PORT: "M17.657 16.657L13.414 20.9a1.998 1.998 0l-4.244-4.243a8 8 0 1111.314 0z", CHECKPOINT_REACHED: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13V7m0 13l6-3m-6-10l6-3m0 13l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4", CUSTOMS_ENTRY: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", CUSTOMS_CLEARED: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", DELIVERED: "M5 13l4 4L19 7", DELAY_REPORTED: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", STATUS_UPDATED: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" };
-const EVT_COLORS = { SHIPMENT_CREATED: "#60a5fa", DEPARTED_PORT: "#a78bfa", ARRIVED_PORT: "#38bdf8", CHECKPOINT_REACHED: "#38bdf8", CUSTOMS_ENTRY: "#f59e0b", CUSTOMS_CLEARED: "#22c55e", DELIVERED: "#4ade80", DELAY_REPORTED: "#ef4444", STATUS_UPDATED: "#fb923c" };
-const EVT_TYPES = ["DEPARTED_PORT", "CHECKPOINT_REACHED", "ARRIVED_PORT", "CUSTOMS_ENTRY", "CUSTOMS_CLEARED", "TRANSSHIPMENT", "DELAY_REPORTED", "INSPECTION"];
+const EVT_ICONS = { SHIPMENT_CREATED: "M12 4v16m8-8H4", DEPARTED_PORT: "M13 10V3L4 14h7v7l9-11h-7z", ARRIVED_PORT: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z", CUSTOMS_ENTRY: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z", CUSTOMS_CLEARED: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", DELIVERED: "M5 13l4 4L19 7", DELAY_REPORTED: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", STATUS_UPDATED: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" };
+const EVT_COLORS = { SHIPMENT_CREATED: "#60a5fa", DEPARTED_PORT: "#a78bfa", ARRIVED_PORT: "#38bdf8", CUSTOMS_ENTRY: "#f59e0b", CUSTOMS_CLEARED: "#22c55e", DELIVERED: "#4ade80", DELAY_REPORTED: "#ef4444", STATUS_UPDATED: "#fb923c" };
+const EVT_TYPES = ["DEPARTED_PORT", "ARRIVED_PORT", "CUSTOMS_ENTRY", "CUSTOMS_CLEARED", "TRANSSHIPMENT", "DELAY_REPORTED", "INSPECTION"];
 
 const inputStyle = { width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", color: "#e2e8f0", padding: "11px 14px", borderRadius: 9, fontSize: 14, outline: "none", boxSizing: "border-box" };
 
@@ -35,7 +35,7 @@ export default function ShipmentDetail() {
   const handleEvent = async () => {
     if (!form.location || !form.description) return alert("Fill all fields");
     setSubmitting(true);
-    try { const r = await recordEvent(id, { eventType: form.eventType, location: form.location, description: form.description }); setShipment(r.data); setShowModal(false); setForm({ eventType: "DEPARTED_PORT", location: "", description: "" }); }
+    try { const r = await recordEvent(id, form.eventType, form.location, form.description); setShipment(r.data); setShowModal(false); setForm({ eventType: "DEPARTED_PORT", location: "", description: "" }); }
     catch (e) { alert("Error: " + e.message); } finally { setSubmitting(false); }
   };
 
